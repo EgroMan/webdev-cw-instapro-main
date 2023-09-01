@@ -1,8 +1,7 @@
-import { user } from "../index.js";
-import { goToPage, logout} from "../index.js";
+import { user, goToPage, logout } from "../index.js";
 import { POSTS_PAGE, USER_POSTS_PAGE } from "../routes.js";
 import { userPageOpen} from "./posts-page-component.js";
-let userPostsId;
+export let userPostsId;
 
 export function renderAddPostPageComponent({ appEl, onAddPostClick }) {
   const render = () => {
@@ -39,8 +38,6 @@ export function renderAddPostPageComponent({ appEl, onAddPostClick }) {
   postButtonBack.addEventListener(`click`, () => {
     loginedUserPosts()
     goToPage(POSTS_PAGE)
-
-    console.log(userPostsId)
   })
 }
 
@@ -52,13 +49,13 @@ function addPostFunc() {
   const postButtonAdd = document.getElementById(`post-button`)
 
   postPhotoInput.addEventListener(`change`, () => {
-    postButtonLabel.classList.add("hide")
-    postButtonAdd.classList.remove("hide")
+    postButtonLabel.classList.add("hide");
+    postButtonAdd.classList.remove("hide");
     console.log(postButtonAdd)
 
-    const token = user.token
-    console.log(user)
-    console.log(token)
+    const token = user.token;
+    console.log(user);
+    console.log(token);
 
     //получение файла изображения
 
@@ -77,14 +74,14 @@ function addPostFunc() {
           return response.json();
         })
         .then((data) => {
-          console.log(`${data.fileUrl}`)
-          const imgRef = data.fileUrl
+          console.log(`${data.fileUrl}`);
+          const imgRef = data.fileUrl;
 
           const postImageInput = document.getElementById(`imagePost-input`);
           console.log(postImageInput)
           postImageInput.classList.add("view")
           console.log(postImageInput.innerHTML)
-          return postImageInput.innerHTML = `<img class="file-upload-image-big view" id="imagePost-input" src="${imgRef}" alt ="превью файла"/>`
+          return (postImageInput.innerHTML = `<img class="file-upload-image-big view" id="imagePost-input" src="${imgRef}" alt ="превью файла"/>`);
         })
     } getRef()
 
@@ -94,9 +91,9 @@ function addPostFunc() {
 
       function loaderButton() {
         const postLoadButton = document.getElementById(`post-button`);
-        console.log(postLoadButton.innerHTML)
-        postLoadButton.disabled
-        return postLoadButton.innerHTML = `<button disabled class="button-photo " id="post-button" >загружаем...</button>`
+        console.log(postLoadButton.innerHTML);
+        postLoadButton.disabled;
+        return (postLoadButton.innerHTML = `<button disabled class="button-photo " id="post-button" >загружаем...</button>`)
       }
       loaderButton()
 
@@ -112,8 +109,6 @@ function addPostFunc() {
           return response.json();
         })
         .then((data) => {
-
-
           //отправка файла из облака в приложение
           return fetch(`https://wedev-api.sky.pro/api/v1/egor_torg/instapro`, {
             method: "POST",
@@ -126,17 +121,14 @@ function addPostFunc() {
           }).then((response) => {
             if (response.status === 400)
               throw new Error(`Добавьте описание...`);
-
-
             return response.json()
           }).then((data) => {
             if (data.result === 'ok') {
-              console.log(data)
               const postLoadButton = document.getElementById(`post-button`);
               console.log(postLoadButton.innerHTML)
               loginedUserPosts()
               goToPage(USER_POSTS_PAGE)
-              return postLoadButton.innerHTML = `<button disabled class="button-photo" id="post-button">готово</button>`
+              return (postLoadButton.innerHTML = `<button disabled class="button-photo" id="post-button">готово</button>`)
             }
 
 
@@ -146,7 +138,7 @@ function addPostFunc() {
               const postLoadButton = document.getElementById(`post-button`);
               console.log(postLoadButton.innerHTML)
               postLoadButton.disabled
-              return postLoadButton.innerHTML = `<button  class="button-photo " id="post-button" >загрузить</button>`
+              return (postLoadButton.innerHTML = `<button  class="button-photo " id="post-button" >загрузить</button>`)
             }
             loaderButton()
             alert(`111${error}`);
@@ -165,11 +157,10 @@ export function loginedUserPosts() {
   return fetch(`https://wedev-api.sky.pro/api/v1/egor_torg/instapro/user-posts/${userPostsId}`, {
     method: "GET",
     headers: { Authorization: `Bearer ${user.token}` },
-  }).then((response) => { return response.json() }).then((data) => {
-
-    console.log(data)
-    return data.posts;
+  }).then((response) => {
+    return response.json();
   })
-
-
-}
+  .then((data) => {
+    //console.log(data)
+    return data.posts;
+  })}

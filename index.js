@@ -1,6 +1,5 @@
-//import { user } from "../index.js";
+
 import { getPosts } from "./api.js";
-//import { getUserPosts } from "./api.js";
 import { renderAddPostPageComponent } from "./components/add-post-page-component.js";
 import { renderAuthPageComponent } from "./components/auth-page-component.js";
 import {
@@ -17,8 +16,6 @@ import {
   removeUserFromLocalStorage,
   saveUserToLocalStorage,
 } from "./helpers.js";
-//import  token  from "./api.js"
-import { likePost} from "./components/posts-page-component.js";
 import { reRenderPosts} from "./components/posts-page-component.js";
 import { loginedUserPosts } from "./components/add-post-page-component.js";
 //import {likePost} from "./components/posts-page-component.js"
@@ -60,7 +57,6 @@ export const goToPage = (newPage, data) => {
 
       return getPosts({ token: getToken() })
         .then((newPosts) => {
-          console.log(newPosts)
           page = POSTS_PAGE;
           posts = newPosts;
           renderApp();
@@ -76,7 +72,6 @@ export const goToPage = (newPage, data) => {
       renderApp();
       return loginedUserPosts()
       .then((newPosts) => {
-        console.log(newPosts)
         page = USER_POSTS_PAGE;
         posts = [];
         renderApp(newPosts);
@@ -86,13 +81,6 @@ export const goToPage = (newPage, data) => {
         goToPage(POSTS_PAGE);
       });
       // TODO: реализовать получение постов юзера из API
-
-
-      //console.log("Открываю страницу пользователя: ", data.userId);
-
-
-
-
     }
 
     page = newPage;
@@ -145,18 +133,14 @@ const renderApp = () => {
 
     //TODO: реализовать страницу фотографию пользвателя
 
-    loginedUserPosts() 
-    .then((data) => {
-
-      console.log(data)
-      appEl.innerHTML=data.map((i,index)=>{
-        let likesAr =[] = i.likes
-        let likesName =[];
-        for (let index = 0; index < likesAr.length; index++) 
-        {
-        likesName.push(` ${likesAr[index].name}`)
-        } 
-  //render posts page new
+    loginedUserPosts().then((data) => {
+      //console.log(data)
+      appEl.innerHTML = data.map((i, index) => {
+        let likesAr = ([] = i.likes);
+        let likesName = [];
+        for (let index = 0; index < likesAr.length; index++) {
+          likesName.push(` ${likesAr[index].name}`);
+        }
   return `<div class="page-container" id ="page-container-id">
   <div class="header-container" ></div>
   <ul class="posts"id ="posts-id">
@@ -170,7 +154,11 @@ const renderApp = () => {
   </div>
   <div class="post-likes">
   <button data-post-id="${i.id}" class="like-button">
-  <img src="./assets/images/like-active.svg">
+  <img src="${
+    i.isLiked === true
+      ? "./assets/images/like-active.svg"
+      : "./assets/images/like-not-active.svg"
+  }">
   </button>
   <p class="post-likes-text" id ="likes-number-id">
   Нравится: <strong>${i.likes.length}</strong>
@@ -206,19 +194,15 @@ for (const likeEl of likePost) {
       method: "POST",
       headers: { Authorization: `Bearer ${user.token}` },
       }).then((response)=>{
-        return response.json()
+        return response.json();
       }).then((data) => {
-        console.log(data)
         return fetch(`https://wedev-api.sky.pro/api/v1/egor_torg/instapro/user-posts/`,{
         method: "GET",
         headers: { Authorization: `Bearer ${user.token}` }, 
       }).then((response)=>response.json()).then((data)=>{
-        console.log(data)
         let likeData =data
 
-      //re render pge posts
-      reRenderPosts(likeData)
-      return likeData
+      return likeData;
     }).catch((err)=>{alert(`${err.message}`)})
 
     }).catch((err)=>{alert(`${err.message}`)})
@@ -227,42 +211,22 @@ for (const likeEl of likePost) {
     return fetch(`https://wedev-api.sky.pro/api/v1/egor_torg/instapro/user-posts/${likeEl.dataset.postId}/like`, {
       method: "POST",
       headers: { Authorization: `Bearer ${user.token}` },
-
     }).then((response) => {
       return response.json()
     }).then((data) => {
-      console.log(data)
       return fetch(`https://wedev-api.sky.pro/api/v1/egor_torg/instapro/user-posts/`,{
         method: "GET",
         headers: { Authorization: `Bearer ${user.token}` }, 
       }).then((response)=>response.json()).then((data)=>{console.log(data)
         let likeData =data
-
-      //rerender pge posts
-      reRenderPosts(likeData)
-      return likeData
+        goToPage(USER_POSTS_PAGE)
+      return likeData;
       }).catch((err)=>{alert(`${err.message}`)})
-
-
     }).catch((err)=>{alert(`${err.message}`)})
-
   })}
-
 })
 //console.log(postsToIndex)//импортировать в файл массив или добыть массив самому
-
     })
-
-  
-  // return renderPostsPageComponent({
-  //   appEl,
-  // });
-  
-  
-  
-  
-  
-  
   //"Здесь будет страница фотографий пользователя";
 }
 };
