@@ -1,8 +1,10 @@
-import { user, posts, goToPage } from "../index.js";
+import { user } from "../index.js";
 import { renderHeaderComponent } from "./header-component.js";
+import { posts, goToPage } from "../index.js";
 import { AUTH_PAGE, USER_POSTS_PAGE } from "../routes.js";
-import { loginedUserPosts, userPostsId} from "./add-post-page-component.js";
+import { loginedUserPosts } from "./add-post-page-component.js";
 let userPostId;
+import { userPostsId } from "./add-post-page-component.js";
 
 
 
@@ -390,7 +392,6 @@ ${i.createdAt}
         </ul>
         </div>`;
             });
-          })}});}}
 
           return fetch(
             `https://wedev-api.sky.pro/api/v1/egor_torg/instapro/user-posts/${userEl.dataset.userId}`,
@@ -479,11 +480,16 @@ ${i.createdAt}
           .catch((err) => {
             alert(`${err.message}`);
           });
-                    });
-                });
-              }
-              return data.posts;
-            })
+        });
+    });
+  }
+  return data.posts;
+});
+});
+}
+});
+}
+}
 export function reRenderPostsUser(data) {
 let newArr = [];
 newArr = data.posts;
@@ -661,5 +667,7 @@ for (const likeEl of likePost) {
           })
         }
       })
+
   });
-}}
+}
+}

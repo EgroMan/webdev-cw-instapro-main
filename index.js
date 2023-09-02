@@ -1,5 +1,6 @@
 
 import { getPosts } from "./api.js";
+import { dateFormat } from "../helpers.js";
 import { renderAddPostPageComponent } from "./components/add-post-page-component.js";
 import { renderAuthPageComponent } from "./components/auth-page-component.js";
 import {
@@ -169,7 +170,7 @@ const renderApp = () => {
   ${i.description}
   </p>
   <p class="post-date">
-  ${i.createdAt}
+  ${dateFormat(new Date(i.createdAt))}
   </p>
   </li>
   </ul>
@@ -201,7 +202,7 @@ for (const likeEl of likePost) {
         headers: { Authorization: `Bearer ${user.token}` }, 
       }).then((response)=>response.json()).then((data)=>{
         let likeData =data
-
+        goToPage(USER_POSTS_PAGE);
       return likeData;
     }).catch((err)=>{alert(`${err.message}`)})
 
@@ -220,6 +221,7 @@ for (const likeEl of likePost) {
       }).then((response)=>response.json()).then((data)=>{console.log(data)
         let likeData =data
         goToPage(USER_POSTS_PAGE)
+        goToPage(USER_POSTS_PAGE);
       return likeData;
       }).catch((err)=>{alert(`${err.message}`)})
     }).catch((err)=>{alert(`${err.message}`)})
