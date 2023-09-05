@@ -9,7 +9,7 @@ export function renderHeaderComponent({ element }) {
       ${
         user
           ? `<div title="Добавить пост" class="add-post-sign"></div>`
-          : "Войтий"
+          : "Войти"
       }
       </button>
       ${

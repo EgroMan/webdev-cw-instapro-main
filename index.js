@@ -1,6 +1,4 @@
-import { getPosts } from "./api.js";
-import { format } from "date-fns";
-//import { dateFormat } from "../helpers.js";
+import { getPosts, createPost, getPostsByUser } from "./api.js";
 import { renderAddPostPageComponent } from "./components/add-post-page-component.js";
 import { renderAuthPageComponent } from "./components/auth-page-component.js";
 import {
@@ -17,16 +15,13 @@ import {
   removeUserFromLocalStorage,
   saveUserToLocalStorage,
 } from "./helpers.js";
-//import  token  from "./api.js"
-import { likePost } from "./components/posts-page-component.js";
-import { loginedUserPosts } from "./components/add-post-page-component.js";
-//import {likePost} from "./components/posts-page-component.js"
-import { reRenderPosts } from "./components/posts-page-component.js";
+
 export let user = getUserFromLocalStorage();
 export let page = null;
 export let posts = [];
+export let currentUserId = null; //НОВОЕ
 
-const getToken = () => {
+export const getToken = () => {
   const token = user ? `Bearer ${user.token}` : undefined;
   return token;
 };
@@ -37,9 +32,21 @@ export const logout = () => {
   goToPage(POSTS_PAGE);
 };
 
-/**
- * Включает страницу приложения
- */
+export const updatePostsAndGoToPostsPage = () => {
+  page = LOADING_PAGE;
+  renderApp();
+
+  return getPosts({ token: getToken() })
+    .then((newPosts) => {
+      page = POSTS_PAGE;
+      posts = newPosts;
+      renderApp();
+    })
+    .catch((error) => {
+      console.error(error);
+      goToPage(POSTS_PAGE);
+    });
+};
 
 export const goToPage = (newPage, data) => {
   if (
@@ -76,31 +83,31 @@ export const goToPage = (newPage, data) => {
     if (newPage === USER_POSTS_PAGE) {
       page = LOADING_PAGE;
       renderApp();
-      return loginedUserPosts()
+      currentUserId = data.userId;
+    
+      return getPostsByUser({ token: getToken(), id: data.userId })
         .then((newPosts) => {
-          //console.log(newPosts);
+          console.log('Posts returned by getPostsByUser:', newPosts);
           page = USER_POSTS_PAGE;
-          posts = [];
-          renderApp(newPosts);
+          posts = newPosts.posts; ;
+          renderApp();
         })
         .catch((error) => {
           console.error(error);
           goToPage(POSTS_PAGE);
         });
-      // TODO: реализовать получение постов юзера из API
-
-      //console.log("Открываю страницу пользователя: ", data.userId);
     }
-
+    
     page = newPage;
     renderApp();
     return;
   }
-
   throw new Error("страницы не существует");
 };
-const renderApp = () => {
+
+export const renderApp = () => {
   const appEl = document.getElementById("app");
+  const currentUserName = user ? user.name : null;
   if (page === LOADING_PAGE) {
     return renderLoadingPageComponent({
       appEl,
@@ -126,144 +133,28 @@ const renderApp = () => {
     return renderAddPostPageComponent({
       appEl,
       onAddPostClick({ description, imageUrl }) {
-        // TODO: реализовать добавление поста в API
-        goToPage(POSTS_PAGE);
+        createPost({ token: getToken(), description, imageUrl })
+          .then((post) => {
+            console.log("Добавленный пост:", post);
+            updatePostsAndGoToPostsPage();
+          })
+          .catch((error) => {
+            console.error("Ошибка при добавлении поста:", error);
+          });
       },
     });
   }
 
-  if (page === POSTS_PAGE) {
+  if (page === POSTS_PAGE || page === USER_POSTS_PAGE) {
     return renderPostsPageComponent({
       appEl,
+      posts,
+      userId: page === USER_POSTS_PAGE ? currentUserId : null,
+      token: getToken(),
+      currentUserName,
     });
   }
 
-  if (page === USER_POSTS_PAGE) {
-    //TODO: реализовать страницу фотографию пользвателя
-
-    loginedUserPosts().then((data) => {
-      appEl.innerHTML = data.map((i, index) => {
-        let likesAr = ([] = i.likes);
-        let likesName = [];
-        for (let index = 0; index < likesAr.length; index++) {
-          likesName.push(` ${likesAr[index].name}`);
-        }
-        //render posts page new
-        return `<div class="page-container" id ="page-container-id">
-  <div class="header-container" ></div>
-  <ul class="posts"id ="posts-id">
-  <li class="post" id ="post-id">
-  <div class="post-header" data-user-id="${i.user.id}">
-  <img src="${i.user.imageUrl}" class="post-header__user-image">
-  <p class="post-header__user-name">${i.user.name}</p>
-  </div>
-  <div class="post-image-container">
-  <img class="post-image" src="${i.imageUrl}">
-  </div>
-  <div class="post-likes">
-  <button data-post-id="${i.id}" class="like-button">
-  <img src="${
-    i.isLiked === true
-      ? "./assets/images/like-active.svg"
-      : "./assets/images/like-not-active.svg"
-  }">
-  </button>
-  <p class="post-likes-text" id ="likes-number-id">
-  Нравится: <strong>${i.likes.length}</strong>
-  </p>
-  </div>
-  <p class="post-text">
-  <span class="user-name">${likesName}</span>
-  ${i.description}
-  </p>
-  <p class="post-date">
-  ${format(new Date(i.createdAt), "dd/MM/yyyy hh:mm")}
-  </p>
-  </li>
-  </ul>
-  </div>`;
-      });
-
-      //навесить лайки
-
-      loginedUserPosts().then((data) => {
-        let posts = data;
-        const likePost = document.querySelectorAll(".like-button");
-        for (const likeEl of likePost) {
-          let post = posts.filter((item) => item.id === likeEl.dataset.postId);
-          likeEl.addEventListener("click", () => {
-            if (post[0].isLiked === true) {
-              return fetch(
-                `https://wedev-api.sky.pro/api/v1/egor_torg/instapro/${likeEl.dataset.postId}/dislike`,
-                {
-                  method: "POST",
-                  headers: { Authorization: `Bearer ${user.token}` },
-                }
-              )
-                .then((response) => {
-                  return response.json();
-                })
-                .then((data) => {
-                  return fetch(
-                    `https://wedev-api.sky.pro/api/v1/egor_torg/instapro/`,
-                    {
-                      method: "GET",
-                      headers: { Authorization: `Bearer ${user.token}` },
-                    }
-                  )
-                    .then((response) => response.json())
-                    .then((data) => {
-                      let likeData = data;
-                      goToPage(USER_POSTS_PAGE);
-                      return likeData;
-                    })
-                    .catch((err) => {
-                      alert(`${err.message}`);
-                    });
-                })
-                .catch((err) => {
-                  alert(`${err.message}`);
-                });
-            }
-
-            return fetch(
-              `https://wedev-api.sky.pro/api/v1/egor_torg/instapro/${likeEl.dataset.postId}/like`,
-              {
-                method: "POST",
-                headers: { Authorization: `Bearer ${user.token}` },
-              }
-            )
-              .then((response) => {
-                return response.json();
-              })
-              .then((data) => {
-                //console.log(data)
-                return fetch(
-                  `https://wedev-api.sky.pro/api/v1/egor_torg/instapro/`,
-                  {
-                    method: "GET",
-                    headers: { Authorization: `Bearer ${user.token}` },
-                  }
-                )
-                  .then((response) => response.json())
-                  .then((data) => {
-                    //console.log(data)
-                    let likeData = data;
-                    goToPage(USER_POSTS_PAGE);
-                    return likeData;
-                  })
-                  .catch((err) => {
-                    alert(`${err.message}`);
-                  });
-              })
-              .catch((err) => {
-                alert(`${err.message}`);
-              });
-          });
-        }
-      });
-    });
-  }
 };
 
 goToPage(POSTS_PAGE);
